@@ -3,7 +3,7 @@ import { handphoneData } from '../json/dataHp';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Heart, MessageSquare, X, Trash2,
-    LayoutDashboard, Zap, Compass, Star, Settings, Tag
+    LayoutDashboard, Zap, Compass, Star, Settings, Tag, ShoppingBag, CheckCircle 
 } from 'lucide-react';
 
 // --- Komponen Sidebar ---
@@ -18,6 +18,19 @@ const ProductCard = ({ phone, onLike, onComment, onDetails, onAddToCart, isLiked
 // --- Komponen Modal ---
 const AppleModal = ({ onClose, children }) => (<motion.div className="fixed inset-0 bg-black/30 backdrop-blur-md flex items-center justify-center z-50 p-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}> <motion.div className="bg-white/80 backdrop-blur-xl border border-gray-200/50 shadow-2xl rounded-2xl p-8 max-w-2xl w-full relative" initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}> <motion.button onClick={onClose} className="absolute top-4 right-4 text-gray-500 hover:text-black" whileTap={{ scale: 0.9 }}><X size={24} /></motion.button> {children} </motion.div> </motion.div>);
 const InfoModal = ({ phone, onClose }) => (<AppleModal onClose={onClose}> <div className="flex flex-col md:flex-row gap-8"> <img src={phone.image} alt={phone.name} className="w-full md:w-1/2 h-64 object-contain rounded-lg" /> <div className="flex-1"> <h2 className="text-3xl font-bold text-slate-900 mb-2">{phone.name}</h2> <p className="text-slate-600 mb-4">{phone.brand} - {phone.category}</p> <p className="text-3xl font-semibold text-slate-900 mb-4">${phone.price}</p> <p className="text-slate-700">{phone.description}</p> </div> </div> </AppleModal>);
+
+const ToastNotification = ({ message, icon }) => (
+    <motion.div
+        className="fixed bottom-5 right-5 z-50 flex items-center gap-3 p-4 bg-slate-800 text-white rounded-lg shadow-xl"
+        initial={{ opacity: 0, y: 50, scale: 0.3 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 20, scale: 0.5 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+    >
+        {icon}
+        <span>{message}</span>
+    </motion.div>
+);
 
 const CommentModal = ({ phone, onClose, existingComments, onAddComment, onDeleteComment }) => { // <-- Terima prop onDeleteComment
     const [newComment, setNewComment] = useState('');
@@ -54,25 +67,43 @@ const CommentModal = ({ phone, onClose, existingComments, onAddComment, onDelete
 };
 
 
-const MainContent = ({ onAddToCart }) => {
+const MainContent = ({ onAddToCart, comments, onAddComment, onDeleteComment }) => {
     // State
     const [likedItems, setLikedItems] = useState({});
     const [selectedPhone, setSelectedPhone] = useState(null);
     const [showCommentModal, setShowCommentModal] = useState(null);
-    const [comments, setComments] = useState({});
 
-    const handleLike = (id) => setLikedItems(prev => ({ ...prev, [id]: !prev[id] }));
-    const handleAddComment = (phoneId, comment) => {
-        const existingComments = comments[phoneId] || [];
-        setComments({ ...comments, [phoneId]: [...existingComments, comment] });
+    const [toast, setToast] = useState({ show: false, message: '', icon: null });
+
+    const showToast = (message, icon) => {
+        setToast({ show: true, message, icon });
+        setTimeout(() => {
+            setToast({ show: false, message: '', icon: null });
+        }, 3000); // Sembunyikan setelah 3 detik
     };
 
-    // --- Deleted Comment ---
-    const handleDeleteComment = (phoneId, commentIndex) => {
-        const phoneComments = comments[phoneId] || [];
-        // Buat array baru tanpa komentar yang ingin dihapus
-        const updatedComments = phoneComments.filter((_, index) => index !== commentIndex);
-        setComments({ ...comments, [phoneId]: updatedComments });
+    const handleLike = (id) => {
+        const isNowLiked = !likedItems[id];
+        setLikedItems(prev => ({ ...prev, [id]: isNowLiked }));
+        showToast(
+            isNowLiked ? 'Added to favorites!' : 'Removed from favorites',
+            <Heart size={20} className={isNowLiked ? 'text-red-500' : 'text-white'} />
+        );
+    };
+
+    const handleAddToCartWithToast = () => {
+        onAddToCart(); // Tetap jalankan fungsi asli dari App.jsx
+        showToast('Added to cart!', <ShoppingBag size={20} />);
+    };
+
+    const handleAddCommentWithToast = (phoneId, comment) => {
+        onAddComment(phoneId, comment);
+        showToast('Comment added!', <CheckCircle size={20} className="text-green-500" />);
+    };
+
+    const handleDeleteCommentWithToast = (phoneId, commentIndex) => {
+        onDeleteComment(phoneId, commentIndex);
+        showToast('Comment deleted', <Trash2 size={20} className="text-red-500" />);
     };
 
     return (
@@ -93,7 +124,7 @@ const MainContent = ({ onAddToCart }) => {
                                     onLike={() => handleLike(phone.id)}
                                     onComment={() => setShowCommentModal(phone)}
                                     onDetails={() => setSelectedPhone(phone)}
-                                    onAddToCart={onAddToCart}
+                                    onAddToCart={handleAddToCartWithToast}
                                     isLiked={!!likedItems[phone.id]}
                                 />
                             ))}
@@ -109,10 +140,14 @@ const MainContent = ({ onAddToCart }) => {
                         phone={showCommentModal}
                         onClose={() => setShowCommentModal(null)}
                         existingComments={comments[showCommentModal.id] || []}
-                        onAddComment={handleAddComment}
-                        onDeleteComment={handleDeleteComment}
+                        onAddComment={handleAddCommentWithToast}
+                        onDeleteComment={handleDeleteCommentWithToast}
                     />
                 )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {toast.show && <ToastNotification message={toast.message} icon={toast.icon} />}
             </AnimatePresence>
         </main>
     );
