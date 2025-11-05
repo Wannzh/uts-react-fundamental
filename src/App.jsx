@@ -4,6 +4,7 @@ import MainContent from './components/MainContent';
 import Footer from './components/Footer'
 import Hero from './components/Hero';
 import CartDrawer from './components/CartDrawer';
+import Support from './components/Support';
 
 export default function App() {
   // Persist cart items as { [productId]: quantity }
@@ -20,6 +21,7 @@ export default function App() {
   const [comments, setComments] = useState({});
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [route, setRoute] = useState('home'); // 'home' or 'support'
 
   // Accept productId and delta (positive = add, negative = remove)
   const handleAddToCart = (productId, delta = 1) => {
@@ -51,6 +53,8 @@ export default function App() {
     if (!category || category === 'Store') setSelectedCategory(null);
     else setSelectedCategory(category);
     // keep existing search when changing category
+    // ensure we're on the main route when selecting a category
+    setRoute('home');
   };
 
   const handleClearFilters = () => {
@@ -60,6 +64,12 @@ export default function App() {
 
   const handleSearchChange = (value) => {
     setSearchQuery(value);
+  };
+
+  const handleNavigate = (to) => {
+    // simple in-app routing
+    if (to === 'support') setRoute('support');
+    else setRoute('home');
   };
 
   const handleAddComment = (phoneId, comment) => {
@@ -86,18 +96,25 @@ export default function App() {
         onCategoryChange={handleCategoryChange}
         onClearFilters={handleClearFilters}
         onSearchChange={handleSearchChange}
+        onNavigate={handleNavigate}
       />
-      <Hero />
-      <MainContent 
-        onAddToCart={handleAddToCart}
-        comments={comments}
-        onAddComment={handleAddComment}
-        onDeleteComment={handleDeleteComment}
-        selectedCategory={selectedCategory}
-        searchQuery={searchQuery}
-        onCategoryChange={handleCategoryChange}
-        cartItems={cartItems}
-      />
+      {route === 'support' ? (
+        <Support />
+      ) : (
+        <>
+          <Hero />
+          <MainContent 
+            onAddToCart={handleAddToCart}
+            comments={comments}
+            onAddComment={handleAddComment}
+            onDeleteComment={handleDeleteComment}
+            selectedCategory={selectedCategory}
+            searchQuery={searchQuery}
+            onCategoryChange={handleCategoryChange}
+            cartItems={cartItems}
+          />
+        </>
+      )}
       <Footer />
       <CartDrawer
         open={showCart}

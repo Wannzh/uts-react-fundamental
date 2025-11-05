@@ -3,19 +3,21 @@ import { handphoneData } from '../json/dataHp';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Heart, MessageSquare, X, Trash2,
-    LayoutDashboard, Zap, Compass, Star, Settings, Tag, ShoppingBag, CheckCircle, Plus, Minus
+    LayoutDashboard, Smartphone, Monitor, Tablet, Watch, Eye, Headphones, Tv, ShoppingBag, CheckCircle, Plus, Minus
 } from 'lucide-react';
 import Pagination from './Pagination';
 
 // --- Komponen Sidebar ---
 const Sidebar = ({ onCategorySelect, activeCategory }) => {
     const categories = [
-        { name: 'All Phones', icon: LayoutDashboard },
-        { name: 'For Sale', icon: Tag },
-        { name: 'Music & TV', icon: Zap },
-        { name: 'Accessories', icon: Compass },
-        { name: 'New Arrival', icon: Star },
-        { name: 'Offers', icon: Settings },
+        { name: 'All Product', icon: LayoutDashboard },
+        { name: 'iPhone', icon: Smartphone },
+        { name: 'Mac', icon: Monitor },
+        { name: 'iPad', icon: Tablet },
+        { name: 'Watch', icon: Watch },
+        { name: 'Vision', icon: Eye },
+        { name: 'AirPods', icon: Headphones },
+        { name: 'TV', icon: Tv },
     ];
 
     return (
@@ -27,7 +29,7 @@ const Sidebar = ({ onCategorySelect, activeCategory }) => {
                         <li key={index}>
                             <a
                                 href="#"
-                                onClick={(e) => { e.preventDefault(); if (onCategorySelect) { if (cat.name === 'All Phones') onCategorySelect('Store'); else onCategorySelect(cat.name); } }}
+                                onClick={(e) => { e.preventDefault(); if (onCategorySelect) { if (cat.name === 'All Product') onCategorySelect('Store'); else onCategorySelect(cat.name); } }}
                                 className={`flex items-center space-x-3 text-slate-600 hover:text-slate-900 transition-colors ${index === 0 || (activeCategory === cat.name) ? 'font-semibold text-slate-900' : ''}`}
                             >
                                 <cat.icon size={20} />

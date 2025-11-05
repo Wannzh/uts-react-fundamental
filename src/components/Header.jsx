@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ShoppingBag, Search, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const Header = ({ cartCount, onToggleCart, onCategoryChange, onClearFilters, onSearchChange }) => {
+const Header = ({ cartCount, onToggleCart, onCategoryChange, onClearFilters, onSearchChange, onNavigate }) => {
     const navItems = ["Store", "Mac", "iPad", "iPhone", "Watch", "Support"];
     const [showSearch, setShowSearch] = useState(false);
     const [localQuery, setLocalQuery] = useState('');
@@ -16,14 +16,19 @@ const Header = ({ cartCount, onToggleCart, onCategoryChange, onClearFilters, onS
         e.preventDefault();
         if (item === 'Store') {
             onClearFilters && onClearFilters();
+            onNavigate && onNavigate('home');
+        } else if (item === 'Support') {
+            onNavigate && onNavigate('support');
         } else {
             onCategoryChange && onCategoryChange(item);
+            onNavigate && onNavigate('home');
         }
     };
 
     const handleLogoClick = (e) => {
         e.preventDefault();
         onClearFilters && onClearFilters();
+        onNavigate && onNavigate('home');
     };
 
     const handleSearchToggle = (e) => {
