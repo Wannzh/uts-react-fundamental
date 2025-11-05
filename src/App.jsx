@@ -1,18 +1,49 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Header from './components/Header'
 import MainContent from './components/MainContent';
 import Footer from './components/Footer'
 import Hero from './components/Hero';
+import CartDrawer from './components/CartDrawer';
 
 export default function App() {
-  const [cartCount, setCartCount] = useState(0);
+  // Persist cart items as { [productId]: quantity }
+  const [cartItems, setCartItems] = useState(() => {
+    try {
+      const raw = localStorage.getItem('cartItems');
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  });
+  const cartCount = Object.values(cartItems).reduce((s, v) => s + v, 0);
+  const [showCart, setShowCart] = useState(false);
   const [comments, setComments] = useState({});
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Accept productId and delta (positive = add, negative = remove)
   const handleAddToCart = (productId, delta = 1) => {
-    setCartCount(prevCount => Math.max(0, prevCount + delta));
+    setCartItems(prev => {
+      const prevQty = prev[productId] || 0;
+      const nextQty = Math.max(0, prevQty + delta);
+      const next = { ...prev };
+      if (nextQty === 0) delete next[productId];
+      else next[productId] = nextQty;
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('cartItems', JSON.stringify(cartItems));
+    } catch {
+      // ignore
+    }
+  }, [cartItems]);
+
+  const toggleCart = (open) => {
+    if (typeof open === 'boolean') setShowCart(open);
+    else setShowCart(s => !s);
   };
 
   const handleCategoryChange = (category) => {
@@ -50,7 +81,8 @@ export default function App() {
   return (
     <div className="bg-background min-h-screen">
       <Header 
-        cartCount={cartCount} 
+        cartCount={cartCount}
+        onToggleCart={toggleCart}
         onCategoryChange={handleCategoryChange}
         onClearFilters={handleClearFilters}
         onSearchChange={handleSearchChange}
@@ -64,8 +96,15 @@ export default function App() {
         selectedCategory={selectedCategory}
         searchQuery={searchQuery}
         onCategoryChange={handleCategoryChange}
+        cartItems={cartItems}
       />
       <Footer />
+      <CartDrawer
+        open={showCart}
+        onClose={() => setShowCart(false)}
+        cartItems={cartItems}
+        onChangeQuantity={handleAddToCart}
+      />
     </div>
   );
 }

@@ -156,14 +156,13 @@ const CommentModal = ({ phone, onClose, existingComments, onAddComment, onDelete
 };
 
 
-const MainContent = ({ onAddToCart, comments, onAddComment, onDeleteComment, selectedCategory, searchQuery, onCategoryChange }) => {
+const MainContent = ({ onAddToCart, comments, onAddComment, onDeleteComment, selectedCategory, searchQuery, onCategoryChange, cartItems = {} }) => {
     // State
     const [likedItems, setLikedItems] = useState({});
     const [selectedPhone, setSelectedPhone] = useState(null);
     const [showCommentModal, setShowCommentModal] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 6; // Number of items to show per page
-    const [cartQuantities, setCartQuantities] = useState({});
 
     const [toast, setToast] = useState({ show: false, message: '', icon: null });
 
@@ -184,25 +183,12 @@ const MainContent = ({ onAddToCart, comments, onAddComment, onDeleteComment, sel
     };
 
     const handleAddToCartWithToast = (phoneId, delta = 1) => {
-        // update local quantities
-        setCartQuantities(prev => {
-            const prevQty = prev[phoneId] || 0;
-            const nextQty = Math.max(0, prevQty + delta);
-            const next = { ...prev };
-            if (nextQty === 0) delete next[phoneId];
-            else next[phoneId] = nextQty;
-            return next;
-        });
-
-        // notify parent about change in total count
+        // notify parent about change; parent persists state
         onAddToCart && onAddToCart(phoneId, delta);
 
         if (delta > 0) showToast('Added to cart!', <ShoppingBag size={20} />);
         else showToast('Removed from cart', <Trash2 size={20} className="text-red-500" />);
     };
-
-    const increaseQuantity = (phoneId) => handleAddToCartWithToast(phoneId, +1);
-    const decreaseQuantity = (phoneId) => handleAddToCartWithToast(phoneId, -1);
 
     const handleAddCommentWithToast = (phoneId, comment) => {
         onAddComment(phoneId, comment);
@@ -269,9 +255,9 @@ const MainContent = ({ onAddToCart, comments, onAddComment, onDeleteComment, sel
                                             onLike={() => handleLike(phone.id)}
                                             onComment={() => setShowCommentModal(phone)}
                                             onDetails={() => setSelectedPhone(phone)}
-                                            quantity={cartQuantities[phone.id] || 0}
-                                            onIncrease={() => increaseQuantity(phone.id)}
-                                            onDecrease={() => decreaseQuantity(phone.id)}
+                                            quantity={cartItems[phone.id] || 0}
+                                            onIncrease={() => handleAddToCartWithToast(phone.id, +1)}
+                                            onDecrease={() => handleAddToCartWithToast(phone.id, -1)}
                                             isLiked={!!likedItems[phone.id]}
                                         />
                                     ))}

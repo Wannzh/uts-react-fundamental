@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ShoppingBag, Search, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const Header = ({ cartCount, onCategoryChange, onClearFilters, onSearchChange }) => {
+const Header = ({ cartCount, onToggleCart, onCategoryChange, onClearFilters, onSearchChange }) => {
     const navItems = ["Store", "Mac", "iPad", "iPhone", "Watch", "Support"];
     const [showSearch, setShowSearch] = useState(false);
     const [localQuery, setLocalQuery] = useState('');
@@ -37,8 +37,15 @@ const Header = ({ cartCount, onCategoryChange, onClearFilters, onSearchChange })
 
     const handleInputChange = (e) => {
         setLocalQuery(e.target.value);
-        onSearchChange && onSearchChange(e.target.value);
     };
+
+    // debounce localQuery -> onSearchChange
+    useEffect(() => {
+        const id = setTimeout(() => {
+            onSearchChange && onSearchChange(localQuery);
+        }, 250);
+        return () => clearTimeout(id);
+    }, [localQuery, onSearchChange]);
 
     return (
         <header className="bg-black/80 backdrop-blur-md sticky top-0 z-50 border-b border-white/10">
@@ -114,7 +121,9 @@ const Header = ({ cartCount, onCategoryChange, onClearFilters, onSearchChange })
                     </div>
 
                     <div className="relative">
-                        <a href="#" className="text-gray-300 hover:text-white"><ShoppingBag size={16} /></a>
+                        <button onClick={() => onToggleCart && onToggleCart(true)} className="text-gray-300 hover:text-white">
+                            <ShoppingBag size={16} />
+                        </button>
                         {cartCount > 0 && (
                             <motion.span
                                 className="absolute -top-1.5 -right-1.5 bg-blue-600 text-white text-[10px] font-semibold rounded-full h-3.5 w-3.5 flex items-center justify-center"
