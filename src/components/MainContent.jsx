@@ -5,6 +5,7 @@ import {
     Heart, MessageSquare, X, Trash2,
     LayoutDashboard, Zap, Compass, Star, Settings, Tag, ShoppingBag, CheckCircle 
 } from 'lucide-react';
+import Pagination from './Pagination';
 
 // --- Komponen Sidebar ---
 const Sidebar = () => {
@@ -72,6 +73,8 @@ const MainContent = ({ onAddToCart, comments, onAddComment, onDeleteComment }) =
     const [likedItems, setLikedItems] = useState({});
     const [selectedPhone, setSelectedPhone] = useState(null);
     const [showCommentModal, setShowCommentModal] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 6; // Number of items to show per page
 
     const [toast, setToast] = useState({ show: false, message: '', icon: null });
 
@@ -117,18 +120,25 @@ const MainContent = ({ onAddToCart, comments, onAddComment, onDeleteComment }) =
                     <Sidebar />
                     <div className="flex-1">
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-8">
-                            {handphoneData.map(phone => (
-                                <ProductCard
-                                    key={phone.id}
-                                    phone={phone}
-                                    onLike={() => handleLike(phone.id)}
-                                    onComment={() => setShowCommentModal(phone)}
-                                    onDetails={() => setSelectedPhone(phone)}
-                                    onAddToCart={handleAddToCartWithToast}
-                                    isLiked={!!likedItems[phone.id]}
-                                />
-                            ))}
+                            {handphoneData
+                                .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                                .map(phone => (
+                                    <ProductCard
+                                        key={phone.id}
+                                        phone={phone}
+                                        onLike={() => handleLike(phone.id)}
+                                        onComment={() => setShowCommentModal(phone)}
+                                        onDetails={() => setSelectedPhone(phone)}
+                                        onAddToCart={handleAddToCartWithToast}
+                                        isLiked={!!likedItems[phone.id]}
+                                    />
+                                ))}
                         </div>
+                        <Pagination 
+                            currentPage={currentPage}
+                            totalPages={Math.ceil(handphoneData.length / itemsPerPage)}
+                            onPageChange={setCurrentPage}
+                        />
                     </div>
                 </div>
             </div>
