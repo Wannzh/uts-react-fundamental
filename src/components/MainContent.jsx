@@ -1,20 +1,108 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { handphoneData } from '../json/dataHp';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Heart, MessageSquare, X, Trash2,
-    LayoutDashboard, Zap, Compass, Star, Settings, Tag, ShoppingBag, CheckCircle 
+    LayoutDashboard, Zap, Compass, Star, Settings, Tag, ShoppingBag, CheckCircle, Plus, Minus
 } from 'lucide-react';
 import Pagination from './Pagination';
 
 // --- Komponen Sidebar ---
-const Sidebar = () => {
-    const categories = [{ name: 'All iPhones', icon: LayoutDashboard }, { name: 'For Sale', icon: Tag }, { name: 'Music & TV', icon: Zap }, { name: 'Accessories', icon: Compass }, { name: 'New Arrival', icon: Star }, { name: 'Offers', icon: Settings },];
-    return (<aside className="w-full md:w-64 self-start"> <div className="bg-gray-50/80 border border-gray-200/80 rounded-2xl p-6"> <h3 className="font-semibold text-lg mb-4 text-slate-800">Categories</h3> <ul className="space-y-3"> {categories.map((cat, index) => (<li key={index}> <a href="#" className={`flex items-center space-x-3 text-slate-600 hover:text-slate-900 transition-colors ${index === 0 ? 'font-semibold text-slate-900' : ''}`}> <cat.icon size={20} /> <span>{cat.name}</span> </a> </li>))} </ul> </div> </aside>);
+const Sidebar = ({ onCategorySelect, activeCategory }) => {
+    const categories = [
+        { name: 'All Phones', icon: LayoutDashboard },
+        { name: 'For Sale', icon: Tag },
+        { name: 'Music & TV', icon: Zap },
+        { name: 'Accessories', icon: Compass },
+        { name: 'New Arrival', icon: Star },
+        { name: 'Offers', icon: Settings },
+    ];
+
+    return (
+        <aside className="w-full md:w-64 self-start">
+            <div className="bg-gray-50/80 border border-gray-200/80 rounded-2xl p-6">
+                <h3 className="font-semibold text-lg mb-4 text-slate-800">Categories</h3>
+                <ul className="space-y-3">
+                    {categories.map((cat, index) => (
+                        <li key={index}>
+                            <a
+                                href="#"
+                                onClick={(e) => { e.preventDefault(); if (onCategorySelect) { if (cat.name === 'All Phones') onCategorySelect('Store'); else onCategorySelect(cat.name); } }}
+                                className={`flex items-center space-x-3 text-slate-600 hover:text-slate-900 transition-colors ${index === 0 || (activeCategory === cat.name) ? 'font-semibold text-slate-900' : ''}`}
+                            >
+                                <cat.icon size={20} />
+                                <span>{cat.name}</span>
+                            </a>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        </aside>
+    );
 };
 
 // --- Komponen Kartu Produk ---
-const ProductCard = ({ phone, onLike, onComment, onDetails, onAddToCart, isLiked }) => (<motion.div className="bg-gray-50/50 hover:bg-white transition-colors duration-300 border border-gray-200/80 rounded-3xl p-6 flex flex-col text-center items-center shadow-sm hover:shadow-xl" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.5 }} transition={{ duration: 0.5 }}> <img src={phone.image} alt={phone.name} className="w-full h-48 object-contain" /> <h3 className="text-xl font-semibold text-slate-900 mt-4">{phone.name}</h3> <p className="text-slate-600 text-sm mt-1 h-10">{phone.description.substring(0, 50)}...</p> <p className="text-lg text-slate-900 font-semibold my-4">${phone.price}</p> <div className="flex justify-center items-center space-x-4 mb-4"> <motion.button onClick={onLike} whileTap={{ scale: 0.9 }}><Heart size={20} className={`transition-colors ${isLiked ? 'text-red-500 fill-current' : 'text-slate-500 hover:text-slate-900'}`} /></motion.button> <motion.button onClick={onComment} whileTap={{ scale: 0.9 }}><MessageSquare size={20} className="text-slate-500 hover:text-slate-900 transition-colors" /></motion.button> </div> <motion.button onClick={onAddToCart} className="bg-blue-600 text-white font-semibold py-2 px-6 rounded-full text-sm hover:bg-blue-500 transition-colors" whileTap={{ scale: 0.95 }}>Add to Cart</motion.button> <button onClick={onDetails} className="text-blue-600 text-sm mt-3 hover:underline">Learn more &gt;</button> </motion.div>);
+const ProductCard = ({ phone, onLike, onComment, onDetails, quantity = 0, onIncrease, onDecrease, isLiked }) => (
+    <motion.div
+        layout
+        className="bg-gray-50/50 hover:bg-white transition-colors duration-300 border border-gray-200/80 rounded-3xl p-6 flex flex-col text-center items-center shadow-sm hover:shadow-xl"
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.5 }}
+        transition={{ duration: 0.5 }}
+    >
+        <img src={phone.image} alt={phone.name} className="w-full h-48 object-contain" />
+        <h3 className="text-xl font-semibold text-slate-900 mt-4">{phone.name}</h3>
+        <p className="text-slate-600 text-sm mt-1 h-10">{phone.description.substring(0, 50)}...</p>
+        <p className="text-lg text-slate-900 font-semibold my-4">${phone.price}</p>
+        <div className="flex justify-center items-center space-x-4 mb-4">
+            <motion.button onClick={onLike} whileTap={{ scale: 0.9 }}>
+                <Heart size={20} className={`transition-colors ${isLiked ? 'text-red-500 fill-current' : 'text-slate-500 hover:text-slate-900'}`} />
+            </motion.button>
+            <motion.button onClick={onComment} whileTap={{ scale: 0.9 }}>
+                <MessageSquare size={20} className="text-slate-500 hover:text-slate-900 transition-colors" />
+            </motion.button>
+        </div>
+
+        {/* Add to Cart / Quantity Control */}
+        <div className="mb-4">
+            <AnimatePresence mode="wait" initial={false}>
+                {quantity > 0 ? (
+                    <motion.div
+                        key={`qty-${phone.id}`}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                        className="inline-flex items-center bg-white border border-gray-200 rounded-full overflow-hidden"
+                    >
+                        <button onClick={onDecrease} className="px-3 py-2 text-slate-700 hover:bg-gray-100">
+                            <Minus size={16} />
+                        </button>
+                        <div className="px-4 py-2 font-semibold text-slate-900">{quantity}</div>
+                        <button onClick={onIncrease} className="px-3 py-2 text-slate-700 hover:bg-gray-100">
+                            <Plus size={16} />
+                        </button>
+                    </motion.div>
+                ) : (
+                    <motion.button
+                        key={`add-${phone.id}`}
+                        onClick={onIncrease}
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 6 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="bg-blue-600 text-white font-semibold py-2 px-6 rounded-full text-sm hover:bg-blue-500 transition-colors"
+                    >
+                        Add to Cart
+                    </motion.button>
+                )}
+            </AnimatePresence>
+        </div>
+
+        <button onClick={onDetails} className="text-blue-600 text-sm mt-3 hover:underline">Learn more &gt;</button>
+    </motion.div>
+);
 
 // --- Komponen Modal ---
 const AppleModal = ({ onClose, children }) => (<motion.div className="fixed inset-0 bg-black/30 backdrop-blur-md flex items-center justify-center z-50 p-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}> <motion.div className="bg-white/80 backdrop-blur-xl border border-gray-200/50 shadow-2xl rounded-2xl p-8 max-w-2xl w-full relative" initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}> <motion.button onClick={onClose} className="absolute top-4 right-4 text-gray-500 hover:text-black" whileTap={{ scale: 0.9 }}><X size={24} /></motion.button> {children} </motion.div> </motion.div>);
@@ -68,13 +156,14 @@ const CommentModal = ({ phone, onClose, existingComments, onAddComment, onDelete
 };
 
 
-const MainContent = ({ onAddToCart, comments, onAddComment, onDeleteComment }) => {
+const MainContent = ({ onAddToCart, comments, onAddComment, onDeleteComment, selectedCategory, searchQuery, onCategoryChange }) => {
     // State
     const [likedItems, setLikedItems] = useState({});
     const [selectedPhone, setSelectedPhone] = useState(null);
     const [showCommentModal, setShowCommentModal] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 6; // Number of items to show per page
+    const [cartQuantities, setCartQuantities] = useState({});
 
     const [toast, setToast] = useState({ show: false, message: '', icon: null });
 
@@ -94,10 +183,26 @@ const MainContent = ({ onAddToCart, comments, onAddComment, onDeleteComment }) =
         );
     };
 
-    const handleAddToCartWithToast = () => {
-        onAddToCart(); // Tetap jalankan fungsi asli dari App.jsx
-        showToast('Added to cart!', <ShoppingBag size={20} />);
+    const handleAddToCartWithToast = (phoneId, delta = 1) => {
+        // update local quantities
+        setCartQuantities(prev => {
+            const prevQty = prev[phoneId] || 0;
+            const nextQty = Math.max(0, prevQty + delta);
+            const next = { ...prev };
+            if (nextQty === 0) delete next[phoneId];
+            else next[phoneId] = nextQty;
+            return next;
+        });
+
+        // notify parent about change in total count
+        onAddToCart && onAddToCart(phoneId, delta);
+
+        if (delta > 0) showToast('Added to cart!', <ShoppingBag size={20} />);
+        else showToast('Removed from cart', <Trash2 size={20} className="text-red-500" />);
     };
+
+    const increaseQuantity = (phoneId) => handleAddToCartWithToast(phoneId, +1);
+    const decreaseQuantity = (phoneId) => handleAddToCartWithToast(phoneId, -1);
 
     const handleAddCommentWithToast = (phoneId, comment) => {
         onAddComment(phoneId, comment);
@@ -109,6 +214,34 @@ const MainContent = ({ onAddToCart, comments, onAddComment, onDeleteComment }) =
         showToast('Comment deleted', <Trash2 size={20} className="text-red-500" />);
     };
 
+    // Reset page when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [selectedCategory, searchQuery]);
+
+    // Apply category & search filters
+    const filteredData = handphoneData.filter(phone => {
+        let matchesCategory = true;
+        if (selectedCategory) {
+            const cat = selectedCategory.toLowerCase();
+            if (cat === 'iphone') matchesCategory = phone.name.toLowerCase().includes('iphone');
+            else if (cat === 'ipad') matchesCategory = phone.name.toLowerCase().includes('ipad') || phone.category.toLowerCase().includes('tablet');
+            else if (cat === 'store') matchesCategory = true; // show all
+            else matchesCategory = false; // Mac, Watch, Support -> no items in dataset
+        }
+
+        let matchesSearch = true;
+        if (searchQuery && searchQuery.trim() !== '') {
+            const q = searchQuery.toLowerCase();
+            matchesSearch = phone.name.toLowerCase().includes(q) || phone.description.toLowerCase().includes(q) || String(phone.price).includes(q);
+        }
+
+        return matchesCategory && matchesSearch;
+    });
+
+    const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
+    const paginated = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
     return (
         <main className="py-20 bg-white">
             <div className="container mx-auto px-6">
@@ -117,28 +250,39 @@ const MainContent = ({ onAddToCart, comments, onAddComment, onDeleteComment }) =
                     <p className="text-xl text-slate-600 mt-4 max-w-2xl mx-auto">With powerful features and a stunning design, there’s an iPhone that’s right for you.</p>
                 </div>
                 <div className="flex flex-col md:flex-row gap-8 mt-16">
-                    <Sidebar />
+                    <Sidebar onCategorySelect={onCategoryChange} activeCategory={selectedCategory} />
                     <div className="flex-1">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-8">
-                            {handphoneData
-                                .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-                                .map(phone => (
-                                    <ProductCard
-                                        key={phone.id}
-                                        phone={phone}
-                                        onLike={() => handleLike(phone.id)}
-                                        onComment={() => setShowCommentModal(phone)}
-                                        onDetails={() => setSelectedPhone(phone)}
-                                        onAddToCart={handleAddToCartWithToast}
-                                        isLiked={!!likedItems[phone.id]}
-                                    />
-                                ))}
-                        </div>
-                        <Pagination 
-                            currentPage={currentPage}
-                            totalPages={Math.ceil(handphoneData.length / itemsPerPage)}
-                            onPageChange={setCurrentPage}
-                        />
+                        {filteredData.length === 0 ? (
+                            <div className="py-20 flex items-center justify-center">
+                                <div className="text-center">
+                                    <h3 className="text-2xl font-semibold text-slate-900">Product does not exist</h3>
+                                    <p className="text-slate-500 mt-2">Try a different category or search term.</p>
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+                                    {paginated.map(phone => (
+                                        <ProductCard
+                                            key={phone.id}
+                                            phone={phone}
+                                            onLike={() => handleLike(phone.id)}
+                                            onComment={() => setShowCommentModal(phone)}
+                                            onDetails={() => setSelectedPhone(phone)}
+                                            quantity={cartQuantities[phone.id] || 0}
+                                            onIncrease={() => increaseQuantity(phone.id)}
+                                            onDecrease={() => decreaseQuantity(phone.id)}
+                                            isLiked={!!likedItems[phone.id]}
+                                        />
+                                    ))}
+                                </div>
+                                <Pagination 
+                                    currentPage={currentPage}
+                                    totalPages={totalPages}
+                                    onPageChange={setCurrentPage}
+                                />
+                            </>
+                        )}
                     </div>
                 </div>
             </div>

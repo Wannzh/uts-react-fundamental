@@ -7,9 +7,28 @@ import Hero from './components/Hero';
 export default function App() {
   const [cartCount, setCartCount] = useState(0);
   const [comments, setComments] = useState({});
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const handleAddToCart = () => {
-    setCartCount(prevCount => prevCount + 1);
+  // Accept productId and delta (positive = add, negative = remove)
+  const handleAddToCart = (productId, delta = 1) => {
+    setCartCount(prevCount => Math.max(0, prevCount + delta));
+  };
+
+  const handleCategoryChange = (category) => {
+    // "Store" or null means show all
+    if (!category || category === 'Store') setSelectedCategory(null);
+    else setSelectedCategory(category);
+    // keep existing search when changing category
+  };
+
+  const handleClearFilters = () => {
+    setSelectedCategory(null);
+    setSearchQuery('');
+  };
+
+  const handleSearchChange = (value) => {
+    setSearchQuery(value);
   };
 
   const handleAddComment = (phoneId, comment) => {
@@ -30,12 +49,22 @@ export default function App() {
   };
   return (
     <div className="bg-background min-h-screen">
-      <Header cartCount={cartCount} />
+      <Header 
+        cartCount={cartCount} 
+        onCategoryChange={handleCategoryChange}
+        onClearFilters={handleClearFilters}
+        onSearchChange={handleSearchChange}
+      />
       <Hero />
-      <MainContent onAddToCart={handleAddToCart}
+      <MainContent 
+        onAddToCart={handleAddToCart}
         comments={comments}
         onAddComment={handleAddComment}
-        onDeleteComment={handleDeleteComment} />
+        onDeleteComment={handleDeleteComment}
+        selectedCategory={selectedCategory}
+        searchQuery={searchQuery}
+        onCategoryChange={handleCategoryChange}
+      />
       <Footer />
     </div>
   );
