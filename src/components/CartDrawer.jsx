@@ -56,9 +56,11 @@ const CartDrawer = ({ open, onClose, cartItems, onChangeQuantity }) => {
             )}
           </div>
 
-          <div className="mt-4 border-t pt-4">
+          <div className="mt-4 border-t pt-4 relative">
+            {/* subtle top divider shadow to help the drawer stand out */}
+            <div className="absolute -top-2 left-0 right-0 h-2 pointer-events-none bg-gradient-to-b from-black/6 to-transparent" />
             <div className="flex items-center justify-between font-semibold text-slate-900">Total <span>${total}</span></div>
-            <button className="mt-4 w-full bg-blue-600 text-white py-2 rounded-md">Checkout</button>
+            <button className="mt-4 w-full bg-blue-700 text-white py-2 rounded-md hover:bg-blue-800">Checkout</button>
           </div>
         </motion.aside>
       )}
